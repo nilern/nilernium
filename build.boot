@@ -2,6 +2,7 @@
   :source-paths #{"src"}
   :resource-paths #{"resources"}
   :dependencies '[[perun "0.2.1-SNAPSHOT"]
+                  [hiccup "1.0.5"]
                   [pandeiro/boot-http "0.6.3-SNAPSHOT"]])
 
 (task-options!
@@ -17,7 +18,7 @@
   (comp (global-metadata)
         (base)
         (markdown)
-        (collection :renderer 'nilernium.core/render :page "index.html")))
+        (render :renderer 'nilernium.core/render)))
 
 (deftask dev
   []
