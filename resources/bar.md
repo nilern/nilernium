@@ -1,1 +1,5 @@
-# Bar
+---
+title: Bar
+---
+
+barbaric

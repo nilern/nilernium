@@ -1,8 +1,11 @@
 (set-env!
   :source-paths #{"src"}
   :resource-paths #{"resources"}
-  :dependencies '[[perun "0.2.1-SNAPSHOT"]
-                  [hiccup "1.0.5"]
+  :dependencies '[[org.clojure/clojure "1.7.0"]
+                  [perun "0.2.1-SNAPSHOT"]
+                  [enlive "1.1.6"]
+                  [garden "1.3.2"]
+                  [org.martinklepsch/boot-garden "1.3.2-0"]
                   [pandeiro/boot-http "0.6.3-SNAPSHOT"]])
 
 (task-options!
@@ -10,15 +13,19 @@
        :version "0.1.0"})
 
 (require '[io.perun :refer :all]
+         '[org.martinklepsch.boot-garden :refer [garden]]
          '[pandeiro.boot-http :refer [serve]])
 
 (deftask build-dev
   "Build dev version"
   []
-  (comp (global-metadata)
+  (comp (garden :styles-var 'nilernium.styles/main
+                :output-to "public/main.css")
         (base)
         (markdown)
-        (render :renderer 'nilernium.core/render)))
+        (global-metadata)
+        (render :renderer 'nilernium.core/render
+                :filterer #(not (re-find #"templates/" (:path %))))))
 
 (deftask dev
   []
