@@ -25,7 +25,7 @@
         (markdown)
         (global-metadata)
         (render :renderer 'nilernium.core/render
-                :filterer #(not (re-find #"templates/" (:path %))))))
+                :filterer #(not (.contains (:path %) "templates/")))))
 
 (deftask dev
   []
