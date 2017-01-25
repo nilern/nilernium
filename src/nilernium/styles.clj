@@ -6,14 +6,16 @@
 
 (def nav-width (u/px 250))
 
+(def header-height (u/px 150))
+
 (defstyles main
-  ["*" {:box-sizing "border-box"}] ; reasonable widths & heights
+  ["*" {:box-sizing :border-box}] ; reasonable widths & heights
 
   ["header, article, nav"
    {:background-color "white"
-    :border [[(u/px 1) "solid" "lightGrey"]]}] ; for debugging
+    :border [[(u/px 1) :solid "lightGrey"]]}] ; for debugging
 
-  [:body
+  ["body"
    {:margin 0
     :background-color "grey"}] ; for debugging
 
@@ -24,6 +26,16 @@
 
   ["nav, #site-title"
    {:width nav-width
-    :float "left"}]
+    :float :left}]
 
-  [".clearfix" {:clear "both"}]) ; good ol' clearfix hack
+  ["#site-title"
+   {:color "red"
+    :text-align :center}]
+
+  ["#page-title"
+   {:float :left}]
+
+  ["header, header > *"
+   {:height header-height}]
+
+  [".clearfix" {:clear :both}]) ; good ol' clearfix hack
