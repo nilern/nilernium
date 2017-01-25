@@ -38,4 +38,13 @@
   ["header, header > *"
    {:height header-height}]
 
-  [".clearfix" {:clear :both}]) ; good ol' clearfix hack
+  [".clearfix" {:clear :both}] ; good ol' clearfix hack
+
+  ["#page-tags"
+   {:padding 0
+    :display :inline}
+   ["li"
+    {:display :inline
+     :list-style :none}
+    ["+ li::before" ; that is, insert between
+     {:content "', '"}]]])
