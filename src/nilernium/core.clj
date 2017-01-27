@@ -16,8 +16,11 @@
 (defsnippet article "templates/main.html" [:article] [entries all-tags content]
   [:nav] (en/after (en/html-snippet content))
   [:nav :> :ul :> :li]
-  (en/clone-for [tag all-tags]
-    [:span] (en/html-content tag)
+  (en/clone-for [tag all-tags
+                 :let [id (str tag "-ncb")]]
+    [:label] (do-> (en/html-content tag)
+                   (en/set-attr :for id))
+    [(en/attr= :type "checkbox")] (en/set-attr :id id)
     [:ul]   (en/clone-for [{:keys [title short-filename tags]} entries
                            :when (some #(= % tag) tags)]
               [:li :> :a] (do-> (en/content title)

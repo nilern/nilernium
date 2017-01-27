@@ -1,5 +1,6 @@
 (ns nilernium.styles
   (:require [garden.units :as u]
+            [garden.selectors :refer [checked]]
             [garden.def :refer [defstyles]]))
 
 (def page-width (u/px 1000))
@@ -47,4 +48,12 @@
     {:display :inline
      :list-style :none}
     ["+ li::before" ; that is, insert between
-     {:content "', '"}]]])
+     {:content "', '"}]]]
+
+  ["nav li"
+   ["input[type=checkbox]"
+    {:display :none}]
+   ["input[type=checkbox] ~ ul"
+    {:display :none}]
+   ["input[type=checkbox]:checked ~ ul"
+    {:display :block}]])
