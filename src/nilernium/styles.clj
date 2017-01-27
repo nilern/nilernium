@@ -3,43 +3,61 @@
             [garden.selectors :refer [checked]]
             [garden.def :refer [defstyles]]))
 
-(def page-width (u/px 1000))
-
-(def nav-width (u/px 250))
-
-(def header-height (u/px 150))
+(def page-width (u/em 50))
 
 (defstyles main
+  ;;;; Boilerplate
+
   ["*" {:box-sizing :border-box}] ; reasonable widths & heights
 
-  ["header, article, nav"
-   {:background-color "white"
-    :border [[(u/px 1) :solid "lightGrey"]]}] ; for debugging
+  ;;;; General Layout
 
   ["body"
-   {:margin 0
+   {:display :table
+    :max-width page-width
+    :margin [[0 "auto"]]
     :background-color "grey"}] ; for debugging
 
-  ["header, article"
-   {:width (u/percent 100)
-    :max-width page-width
-    :margin [[0 "auto"]]}] ; center it
+  ["header, #content"
+   {:display :table-row
+    :background-color "white"}]
 
-  ["nav, #site-title"
-   {:width nav-width
-    :float :left}]
+  ["header > *, nav, article"
+   {:display :table-cell}]
+
+  ;;;; Spacing
+
+  ["#site-title, nav"
+   {:padding [[0 (u/em 1) 0 (u/em 2)]]}]
+
+  ["#page-title, article"
+   {:padding [[0 (u/em 2) 0 (u/em 1)]]}]
+
+  ["pre"
+   {:margin-left (u/em 2)}]
+
+  ;;;; General Typography
+
+  ["body"
+   {:font-family ["Alegreya" "serif"]
+    :font-size (u/px 18)}]
+
+  ["h1, h2, h3, h4, h5, h6"
+   {:font-family ["Eagle Lake" "fantasy"]}]
+
+  ["p"
+   {:margin 0}
+   ["+ p"
+    {:text-indent (u/em 1)}]]
+
+  ["pre"
+   {:font-family ["Inconsolata" "monospace"]}]
+
+  ;;;; Header
 
   ["#site-title"
    {:color "red"
     :text-align :center}]
-
-  ["#page-title"
-   {:float :left}]
-
-  ["header, header > *"
-   {:height header-height}]
-
-  [".clearfix" {:clear :both}] ; good ol' clearfix hack
 
   ["#page-tags"
    {:padding 0
@@ -50,10 +68,28 @@
     ["+ li::before" ; that is, insert between
      {:content "', '"}]]]
 
-  ["nav li"
-   ["input[type=checkbox]"
-    {:display :none}]
-   ["input[type=checkbox] ~ ul"
-    {:display :none}]
-   ["input[type=checkbox]:checked ~ ul"
-    {:display :block}]])
+  ;;;; Navigation
+
+  ["nav > ul"
+   {:margin 0
+    :padding 0}
+   ["> li"
+    {:padding [[(u/ex 1) (u/em 1)]]
+     :list-style :none
+     :border [[(u/px 1) :solid "lightGrey"]]
+     :border-right :none}
+    ["+ li"
+     {:border-top :none}] ; avoid doubling "internal" borders
+
+    ["input[type=checkbox]"
+     {:display :none}]
+    ["input[type=checkbox] ~ ul"
+     {:display :none}]
+    ["input[type=checkbox]:checked ~ ul"
+     {:display :block}]]
+
+   ["> li:first-of-type"
+    {:border-radius [[(u/ex 1) 0 0 0]]}]
+
+   ["> li:last-of-type"
+    {:border-radius [[0 0 0 (u/ex 1)]]}]])
