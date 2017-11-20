@@ -1,6 +1,10 @@
 (ns nilernium.core
   (:require cljsjs.virtual-dom
-            [cljs.core.async :as async :refer [go chan <! >! put!]]))
+            [cljs.core.async :as async :refer [go chan <! >! put!]]
+
+            [nilernium.layout.node :as n]
+            [nilernium.layout :as l]
+            [nilernium.layout.backend.virtual-dom :as v]))
 
 (defn reductions-chan [f acc c]
   (let [dest (chan)]
@@ -32,11 +36,11 @@
   (update state :click-count inc))
 
 (defn render [state events]
-  (js/virtualDom.h "div" #js {"id" "app-root"}
-    #js [(js/virtualDom.h "button"
-           #js {"onclick" (fn [e] (put! events e))}
-           #js ["foo"])
-         (js/virtualDom.h "p" #js {} #js [(str (:click-count state))])]))
+  (->> (n/dom-node :div {:id "app-root"}
+         [(n/dom-node :header {} [])
+          (n/dom-node :nav {} [])
+          (n/dom-node :article {} [])])
+       (l/render v/render)))
 
 ;;;;
 
