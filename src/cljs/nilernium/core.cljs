@@ -44,21 +44,26 @@
                  :layout {:left 0, :width (l/query-attr [['parent :layout :width]] identity)
                           :top 0, :height 50}
                  :style {:background-color "navy"}}
-                {:tag :nav
-                 :id :site-nav
-                 :layout {:left 0, :width 300
-                          :top    (l/query-attr [[:site-header :layout :height]] identity)
-                          :height (l/query-attr [['parent :layout :height]
-                                                 [:site-header :layout :height]] -)}
-                 :style {:background-color "purple"}}
                 {:tag :article
+                 :id :content
                  :layout {:left   (l/query-attr [[:site-nav :layout :width]] identity)
                           :width  (l/query-attr [['parent :layout :width]
                                                  [:site-nav :layout :width]] -)
                           :top    (l/query-attr [[:site-header :layout :height]] identity)
-                          :height (l/query-attr [['parent :layout :height]
-                                                 [:site-header :layout :height]] -)}
-                 :style {:background-color "pink"}}]}))
+                          :height (l/content-height)}
+                 :style {:background-color "pink"}
+                 :children [{:tag :h1
+                             :layout false
+                             :children ["Hello World!"]}
+                            {:tag :p
+                             :layout false
+                             :children ["foo bar baz quux."]}]}
+                {:tag :nav
+                 :id :site-nav
+                 :layout {:left 0, :width 300
+                          :top    (l/query-attr [[:site-header :layout :height]] identity)
+                          :height (l/query-attr [[:content :layout :height]] identity)}
+                 :style {:background-color "purple"}}]}))
 
 ;;;;
 

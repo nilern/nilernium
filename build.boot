@@ -6,7 +6,6 @@
 
                   [cljsjs/virtual-dom "2.1.1-0" :scope "test"]
                   [org.clojure/core.async "0.3.465"]
-                  [org.clojure/core.match "0.3.0-alpha5"]
 
                   [adzerk/boot-cljs        "2.1.3"  :scope "test"]
                   [adzerk/boot-reload      "0.5.2"  :scope "test"]

@@ -1,5 +1,5 @@
 (ns nilernium.layout
-  (:require [clojure.walk :refer [postwalk]]
+  (:require [clojure.walk :refer [prewalk]]
             cljsjs.virtual-dom))
 
 (def ^:dynamic *id-table*)
@@ -180,28 +180,57 @@
 
 ;;;;
 
-(defn normalize-node [node]
-  (merge {:parent (sa-ref)
-          :children []
-          :layout {}
-          :style {}}
-         node))
+(deftype ContentHeightAttr [^:mutable value ^:mutable color]
+  IDerefCtx
+  (deref-ctx [self]
+    (case color
+      :black value
+      (throw (js/Error. "Uninitialized ContentHeightAttr")))))
 
-(defn normalize-layout [layout]
-  (merge (into {} (map (fn [k] [k (layout-query-attr k)])) layout-keys)
-         layout))
+(defn init-ch-attr! [attr dom-node]
+  (set! (.-value attr) (.-offsetHeight dom-node))
+  (set! (.-color attr) :black))
 
-(defn normalize-style [style]
-  (-> (into {:position "absolute"}
-            (map (fn [k] [k (query-attr [['self :layout k]] #(str % "px"))]))
-                 [:left :width :top :height])
-      (merge style)))
+(def content-height? (partial instance? ContentHeightAttr))
+
+(defn content-height []
+  (->ContentHeightAttr nil :white))
+
+(def init-st-attr! init-ch-attr!)
+
+(def subtree-attr? content-height?)
+
+;;;;
+
+(defn normalize-layout [node]
+  (let [layout (:layout node)
+        updater (fn [layout]
+                  (merge (into {} (map (fn [k] [k (layout-query-attr k)])) layout-keys)
+                         layout))]
+    (cond
+      (false? layout) (dissoc node :layout)
+      (or (map? layout) (nil? layout))
+        (update node :layout updater))))
+
+(defn normalize-style [node]
+  (if (contains? node :layout)
+    (let [updater (fn [style]
+                    (merge (into {:position "absolute"}
+                                 (map (fn [k] [k (query-attr [['self :layout k]] #(str % "px"))]))
+                                 [:left :width :top :height])
+                           style))]
+      (update node :style updater))
+    node))
 
 (defn normalize [node]
-  (-> (normalize-node node)
-      (update :layout normalize-layout)
-      (update :style normalize-style)
-      (update :children (partial map normalize))))
+  (if (map? node)
+    (-> node
+        (assoc :parent (sa-ref))
+        normalize-layout
+        normalize-style
+        (update :children #(or % []))
+        (update :children (partial map normalize)))
+    node))
 
 ;;;;
 
@@ -230,28 +259,50 @@
     (make {} node)))
 
 (defn vdom-render [node]
-  (letfn [(render-tag [node] (name (deref-ctx (get node :tag :div))))
+  (letfn [(subtree-attrs [node]
+            (if-let [height (some-> node :layout :height)]
+              (if (subtree-attr? height)
+                [[height] (-> node
+                              (update :layout dissoc :height)
+                              (update :style dissoc :height))]
+                [nil node])
+              [nil node]))
+          (render-tag [node] (name (deref-ctx (get node :tag :div))))
           (render-attr! [attrs k v]
             (case k
               (:tag :parent :children :layout) nil
-              :style (aset attrs (name k) (clj->js (postwalk deref-ctx v)))
-              (aset attrs (name k) (str (postwalk deref-ctx v)))))
-          (render-attrs [node]
+              :style (aset attrs (name k) (clj->js (prewalk deref-ctx v)))
+              (aset attrs (name k) (str (prewalk deref-ctx v)))))
+          (render-attrs [with-st-attrs node]
             (let [res #js {}]
-              (doseq [[k v] node]
+              (doseq [[k v] node :when (or with-st-attrs (not (subtree-attr? v)))]
                 (render-attr! res k v))
+              (when-not with-st-attrs
+                (render-attr! res :visibility "hidden"))
               res))
-          (render-children [children] (to-array (map vdom-render children)))]
+          (render-children [children] (to-array (map vdom-render children)))
+          (render-node [with-st-attrs node]
+            (let [vdom-children (render-children (:children node))]
+              (js/virtualDom.VNode. (render-tag node)
+                                    (render-attrs with-st-attrs node)
+                                    vdom-children)))]
     (if (map? node)
-      (js/virtualDom.VNode. (render-tag node)
-                            (render-attrs node)
-                            (render-children (:children node)))
+      (if-let [[st-attrs node*] (subtree-attrs node)]
+        (do
+          (doseq [st-attr st-attrs]
+            (set! (.-color st-attr) :grey))
+          (let [vdom (render-node false node*)
+                temp-dom (js/virtualDom.create vdom)]
+            (.. js/document -body (appendChild temp-dom))
+            (doseq [st-attr st-attrs]
+              (init-st-attr! st-attr temp-dom))
+            (.. js/document -body (removeChild temp-dom))
+            (render-node true node)))
+        (render-node true node))
       (js/virtualDom.VText. (str node)))))
 
 (defn render [backend node]
   (let [node (normalize node)]
     (init-parents! nil node)
     (binding [*id-table* (id-table node)]
-      (let [result (backend node)]
-        (.log js/console result)
-        result))))
+      (backend node))))
