@@ -94,7 +94,9 @@
 
 ;;;;
 
-(def layout-keys [:left :right :width :top :bottom :height])
+(def layout-keys [:left :hcenter :right :width :top :vcenter :bottom :height])
+(def hlayout-keys (set (take 4 layout-keys)))
+(def vlayout-keys (set (drop 4 layout-keys)))
 
 (declare layout-query-attr?)
 
@@ -119,32 +121,32 @@
                                  (not (layout-query-attr? end))
                                  (not (layout-query-attr? length))]))
 
-(defmethod resolve-layout-attr [:start true true true false] [_ _ center end _]
+(defmethod resolve-layout-attr [:start false true true false] [_ _ center end _]
   (- center (- end center)))
-(defmethod resolve-layout-attr [:start true true false true] [_ _ center _ length]
+(defmethod resolve-layout-attr [:start false true false true] [_ _ center _ length]
   (- center (/ length 2)))
-(defmethod resolve-layout-attr [:start true false true true] [_ _ _ end length]
+(defmethod resolve-layout-attr [:start false false true true] [_ _ _ end length]
   (- end length))
 
-(defmethod resolve-layout-attr [:center true true true false] [_ start _ end _]
+(defmethod resolve-layout-attr [:center true false true false] [_ start _ end _]
   (/ (+ start end) 2))
-(defmethod resolve-layout-attr [:center true true false true] [_ start _ _ length]
+(defmethod resolve-layout-attr [:center true false false true] [_ start _ _ length]
   (+ start (/ length 2)))
-(defmethod resolve-layout-attr [:center false true true true] [_ _ _ end length]
+(defmethod resolve-layout-attr [:center false false true true] [_ _ _ end length]
   (- end (/ length 2)))
 
-(defmethod resolve-layout-attr [:end true true true false] [_ start center _ _]
+(defmethod resolve-layout-attr [:end true true false false] [_ start center _ _]
   (+ center (- center start)))
-(defmethod resolve-layout-attr [:end true false true true] [_ start _ _ length]
+(defmethod resolve-layout-attr [:end true false false true] [_ start _ _ length]
   (+ start length))
-(defmethod resolve-layout-attr [:end false true true true] [_ _ center _ length]
+(defmethod resolve-layout-attr [:end false true false true] [_ _ center _ length]
   (+ center (/ length 2)))
 
-(defmethod resolve-layout-attr [:length true true false true] [_ start center _ _]
+(defmethod resolve-layout-attr [:length true true false false] [_ start center _ _]
   (* 2 (- center start)))
-(defmethod resolve-layout-attr [:length true false true true] [_ start _ end _]
+(defmethod resolve-layout-attr [:length true false true false] [_ start _ end _]
   (- end start))
-(defmethod resolve-layout-attr [:length false true true true] [_ _ center end _]
+(defmethod resolve-layout-attr [:length false true true false] [_ _ center end _]
   (* 2 (- end center)))
 
 (deftype LayoutQueryAttr [^:mutable parent target dependencies ^:mutable value ^:mutable color]
@@ -174,7 +176,11 @@
     value))
 
 (defn layout-query-attr [target]
-  (->LayoutQueryAttr nil target (remove (partial = target) layout-keys) nil :white))
+  (->LayoutQueryAttr nil target
+                         (cond
+                           (hlayout-keys target) (take 4 layout-keys)
+                           (vlayout-keys target) (drop 4 layout-keys))
+                          nil :white))
 
 (def layout-query-attr? (partial instance? LayoutQueryAttr))
 

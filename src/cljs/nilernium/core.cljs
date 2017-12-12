@@ -28,17 +28,22 @@
 
 ;;;;
 
-(def start-state {:click-count 0})
+(def start-state
+  {:window {:width (.-innerWidth js/window)}
+            :height (.-innerHeight js/window)})
 
-(defn transition [state event]
-  (update state :click-count inc))
+(defn transition [state [event-type event-data]]
+  (case event-type
+    :resize (assoc state :window event-data)
+    state))
 
 (defn render [state events]
   (l/render
     l/vdom-render
     {:tag :div
      :id "app-root"
-     :layout {:left 0, :width 800, :top 0, :height 600}
+     :layout {:hcenter (/ (-> state :window :width) 2), :width (min (-> state :window :width) 960)
+              :top 0, :height (-> state :window :height)}
      :children [{:tag :header,
                  :id :site-header
                  :layout {:left 0, :width (l/query-attr [['parent :layout :width]] identity)
@@ -67,10 +72,15 @@
 
 ;;;;
 
+(defn on-resize [events]
+  (put! events [:resize {:width (.-innerWidth js/window),
+                         :height (.-innerHeight js/window)}]))
+
 (defn init! []
   (let [events (chan)
         root (.getElementById js/document "app-root")
         states (reductions-chan transition start-state events)]
+    (.addEventListener js/window "resize" (partial on-resize events))
     (start-renderer! render root states events)))
 
 (init!)
